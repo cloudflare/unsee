@@ -93,6 +93,10 @@ func Alerts(c *gin.Context) {
 	resp.Error = string(alertManagerError)
 	errorLock.RUnlock()
 
+	if resp.Error != "" {
+		apiCache.Flush()
+	}
+
 	// use full URI (including query args) as cache key
 	cacheKey := c.Request.RequestURI
 
