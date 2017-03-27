@@ -79,3 +79,6 @@
 [submodule "vendor/gopkg.in/yaml.v2"]
 	path = vendor/gopkg.in/yaml.v2
 	url = https://gopkg.in/yaml.v2
+[submodule "vendor/github.com/gavv/monotime"]
+	path = vendor/github.com/gavv/monotime
+	url = https://github.com/gavv/monotime

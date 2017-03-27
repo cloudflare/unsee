@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/cloudflare/unsee/config"
 	"github.com/cloudflare/unsee/models"
+	"github.com/gavv/monotime"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -27,7 +27,7 @@ type SilenceAPIResponse struct {
 
 // Get will return fresh data from Alertmanager API
 func (response *SilenceAPIResponse) Get() error {
-	start := time.Now()
+	start := monotime.Now()
 
 	url, err := joinURL(config.Config.AlertmanagerURI, "api/v1/silences")
 	if err != nil {
@@ -44,6 +44,6 @@ func (response *SilenceAPIResponse) Get() error {
 		return errors.New(response.Error)
 	}
 
-	log.Infof("Got %d silences(s) in %s", len(response.Data.Silences), time.Since(start))
+	log.Infof("Got %d silences(s) in %s", len(response.Data.Silences), monotime.Since(start))
 	return nil
 }
