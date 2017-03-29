@@ -16,6 +16,7 @@ import (
 	"github.com/cloudflare/unsee/store"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/gavv/monotime"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,7 +40,7 @@ func noCache(c *gin.Context) {
 
 // index view, html
 func index(c *gin.Context) {
-	start := time.Now()
+	start := monotime.Now()
 
 	cssFiles := readAssets("css")
 	jsFiles := readAssets("js")
@@ -56,26 +57,26 @@ func index(c *gin.Context) {
 		"SentryDSN":         config.Config.SentryPublicDSN,
 		"CSSFiles":          cssFiles,
 		"JSFiles":           jsFiles,
-		"NowQ":              start.Unix(),
+		"NowQ":              time.Now().Unix(),
 		"Config":            config.Config,
 		"QFilter":           q,
 		"DefaultUsed":       defaultUsed,
 		"StaticColorLabels": strings.Join(config.Config.ColorLabelsStatic, " "),
 	})
 
-	log.Infof("[%s] %s %s took %s", c.ClientIP(), c.Request.Method, c.Request.RequestURI, time.Since(start))
+	log.Infof("[%s] %s %s took %s", c.ClientIP(), c.Request.Method, c.Request.RequestURI, monotime.Since(start))
 }
 
 // Help view, html
 func help(c *gin.Context) {
-	start := time.Now()
+	start := monotime.Now()
 	cssFiles := readAssets("css")
 	noCache(c)
 	c.HTML(http.StatusOK, "templates/help.html", gin.H{
 		"CSSFiles":  cssFiles,
 		"SentryDSN": config.Config.SentryPublicDSN,
 	})
-	log.Infof("[%s] <%d> %s %s took %s", c.ClientIP(), http.StatusOK, c.Request.Method, c.Request.RequestURI, time.Since(start))
+	log.Infof("[%s] <%d> %s %s took %s", c.ClientIP(), http.StatusOK, c.Request.Method, c.Request.RequestURI, monotime.Since(start))
 }
 
 func logAlertsView(c *gin.Context, cacheStatus string, duration time.Duration) {
@@ -85,8 +86,8 @@ func logAlertsView(c *gin.Context, cacheStatus string, duration time.Duration) {
 // alerts endpoint, json, JS will query this via AJAX call
 func alerts(c *gin.Context) {
 	noCache(c)
-	start := time.Now()
-	ts, _ := start.UTC().MarshalText()
+	start := monotime.Now()
+	ts, _ := time.Now().UTC().MarshalText()
 
 	// intialize response object, set fields that don't require any locking
 	resp := models.UnseeAlertsResponse{}
@@ -109,7 +110,7 @@ func alerts(c *gin.Context) {
 	data, found := apiCache.Get(cacheKey)
 	if found {
 		c.Data(http.StatusOK, gin.MIMEJSON, data.([]byte))
-		logAlertsView(c, "HIT", time.Since(start))
+		logAlertsView(c, "HIT", monotime.Since(start))
 		return
 	}
 
@@ -209,13 +210,13 @@ func alerts(c *gin.Context) {
 	store.StoreLock.RUnlock()
 
 	c.Data(http.StatusOK, gin.MIMEJSON, data.([]byte))
-	logAlertsView(c, "MIS", time.Since(start))
+	logAlertsView(c, "MIS", monotime.Since(start))
 }
 
 // autocomplete endpoint, json, used for filter autocomplete hints
 func autocomplete(c *gin.Context) {
 	noCache(c)
-	start := time.Now()
+	start := monotime.Now()
 
 	cacheKey := c.Request.RequestURI
 	if cacheKey == "" {
@@ -227,14 +228,14 @@ func autocomplete(c *gin.Context) {
 	data, found := apiCache.Get(cacheKey)
 	if found {
 		c.Data(http.StatusOK, gin.MIMEJSON, data.([]byte))
-		logAlertsView(c, "HIT", time.Since(start))
+		logAlertsView(c, "HIT", monotime.Since(start))
 		return
 	}
 
 	term, found := c.GetQuery("term")
 	if !found || term == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing term=<token> parameter"})
-		log.Infof("[%s] <%d> %s %s took %s", c.ClientIP(), http.StatusBadRequest, c.Request.Method, c.Request.RequestURI, time.Since(start))
+		log.Infof("[%s] <%d> %s %s took %s", c.ClientIP(), http.StatusBadRequest, c.Request.Method, c.Request.RequestURI, monotime.Since(start))
 		return
 	}
 
@@ -264,7 +265,7 @@ func autocomplete(c *gin.Context) {
 	apiCache.Set(cacheKey, data, time.Second*15)
 
 	c.Data(http.StatusOK, gin.MIMEJSON, data.([]byte))
-	logAlertsView(c, "MIS", time.Since(start))
+	logAlertsView(c, "MIS", monotime.Since(start))
 }
 
 func favicon(c *gin.Context) {

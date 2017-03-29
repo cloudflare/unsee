@@ -2,10 +2,10 @@ package alertmanager
 
 import (
 	"errors"
-	"time"
 
 	"github.com/cloudflare/unsee/config"
 	"github.com/cloudflare/unsee/models"
+	"github.com/gavv/monotime"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -20,7 +20,7 @@ type AlertGroupsAPIResponse struct {
 
 // Get response from Alertmanager /api/v1/alerts/groups
 func (response *AlertGroupsAPIResponse) Get() error {
-	start := time.Now()
+	start := monotime.Now()
 
 	url, err := joinURL(config.Config.AlertmanagerURI, "api/v1/alerts/groups")
 	if err != nil {
@@ -36,6 +36,6 @@ func (response *AlertGroupsAPIResponse) Get() error {
 		return errors.New(response.Error)
 	}
 
-	log.Infof("Got %d alert group(s) in %s", len(response.Groups), time.Since(start))
+	log.Infof("Got %d alert group(s) in %s", len(response.Groups), monotime.Since(start))
 	return nil
 }
