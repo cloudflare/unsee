@@ -1,44 +1,36 @@
 package alertmanager
 
 import (
-	"errors"
-	"fmt"
-	"math"
 	"time"
 
+	"github.com/blang/semver"
 	"github.com/cloudflare/unsee/config"
 	"github.com/cloudflare/unsee/models"
 
 	log "github.com/Sirupsen/logrus"
 )
 
-// SilenceAPIResponse is what Alertmanager API returns
-type SilenceAPIResponse struct {
-	Status    string                       `json:"status"`
-	Data      []models.AlertmanagerSilence `json:"data"`
-	ErrorType string                       `json:"errorType"`
-	Error     string                       `json:"error"`
-}
-
-// Get will return fresh data from Alertmanager API
-func (response *SilenceAPIResponse) Get() error {
+// GetSilences will send request to Alertmanager and return list of silences
+// from the API
+func GetSilences(v *semver.Version) ([]models.Silence, error) {
+	silences := []models.Silence{}
 	start := time.Now()
-
 	url, err := joinURL(config.Config.AlertmanagerURI, "api/v1/silences")
 	if err != nil {
-		return err
+		return silences, err
 	}
-	url = fmt.Sprintf("%s?limit=%d", url, math.MaxUint32)
 
-	err = getJSONFromURL(url, config.Config.AlertmanagerTimeout, response)
+	v05, _ := semver.Make("0.5.0")
+	if v.GE(v05) {
+		response := silenceAPIResponseV05{}
+		silences, err = response.Get(url)
+	} else {
+		response := silenceAPIResponseV04{}
+		silences, err = response.Get(url)
+	}
 	if err != nil {
-		return err
+		return silences, err
 	}
-
-	if response.Status != "success" {
-		return errors.New(response.Error)
-	}
-
-	log.Infof("Got %d silences(s) in %s", len(response.Data), time.Since(start))
-	return nil
+	log.Infof("Got %d silences(s) in %s", len(silences), time.Since(start))
+	return silences, nil
 }

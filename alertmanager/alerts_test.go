@@ -1,30 +1,37 @@
 package alertmanager_test
 
 import (
-	"io/ioutil"
+	"fmt"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/cloudflare/unsee/alertmanager"
+	"github.com/cloudflare/unsee/mock"
 	httpmock "gopkg.in/jarcoal/httpmock.v1"
 )
 
 func TestAlertGroupsAPIResponseGet(t *testing.T) {
-	log.SetOutput(ioutil.Discard) // disable logging to console
+	log.SetLevel(log.ErrorLevel)
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mockJSON, err := ioutil.ReadFile("../mock/api/v1/alerts/groups")
-	if err != nil {
-		t.Errorf("Can't open mock 'alerts/groups' file: %s", err.Error())
-	}
-	httpmock.RegisterResponder("GET", "api/v1/alerts/groups", httpmock.NewBytesResponder(200, mockJSON))
 
-	response := alertmanager.AlertGroupsAPIResponse{}
-	err = response.Get()
-	if err != nil {
-		t.Errorf("AlertGroupsAPIResponse.Get() failed: %s", err.Error())
-	}
-	if response.Status != "success" {
-		t.Errorf("Invalid AlertGroupsAPIResponse status: %s", response.Status)
+	for _, version := range alertmanager.SupportedVersions {
+		httpmock.Reset()
+		mock.RegisterURL("api/v1/status", version, "status")
+		mock.RegisterURL("api/v1/alerts/groups", version, "alerts/groups")
+
+		v := alertmanager.GetVersion()
+		vs := fmt.Sprintf("%d.%d", v.Major, v.Minor)
+		if version != vs {
+			t.Errorf("GetVersion() returned '%s', expected '%s'", vs, version)
+		}
+
+		groups, err := alertmanager.GetAlerts(&v)
+		if err != nil {
+			t.Errorf("GetAlerts() failed: %s", err.Error())
+		}
+		if len(groups) != 4 {
+			t.Errorf("Got %d groups, expected %d", len(groups), 4)
+		}
 	}
 }
