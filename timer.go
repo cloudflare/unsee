@@ -25,7 +25,7 @@ func PullFromAlertmanager() {
 
 	v := alertmanager.GetVersion()
 
-	silences, err := alertmanager.GetSilences(&v)
+	silences, err := alertmanager.GetSilences(v)
 	if err != nil {
 		log.Error(err.Error())
 		errorLock.Lock()
@@ -35,7 +35,7 @@ func PullFromAlertmanager() {
 		return
 	}
 
-	alertGroups, err := alertmanager.GetAlerts(&v)
+	alertGroups, err := alertmanager.GetAlerts(v)
 	if err != nil {
 		log.Error(err.Error())
 		errorLock.Lock()

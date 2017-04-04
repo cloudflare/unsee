@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudflare/unsee/alertmanager"
 	"github.com/cloudflare/unsee/config"
 	"github.com/cloudflare/unsee/mock"
 	"github.com/cloudflare/unsee/models"
@@ -20,6 +19,8 @@ import (
 
 	"gopkg.in/jarcoal/httpmock.v1"
 )
+
+var testVersions = []string{"0.4", "0.5"}
 
 func mockConfig() {
 	log.SetLevel(log.ErrorLevel)
@@ -105,7 +106,7 @@ func mockAlerts(version string) {
 
 func TestAlerts(t *testing.T) {
 	mockConfig()
-	for _, version := range alertmanager.SupportedVersions {
+	for _, version := range testVersions {
 		mockAlerts(version)
 		r := ginTestEngine()
 		req, _ := http.NewRequest("GET", "/alerts.json?q=alertname=HTTP_Probe_Failed,instance=web1", nil)
@@ -271,7 +272,7 @@ var acTests = []acTestCase{
 
 func TestAutocomplete(t *testing.T) {
 	mockConfig()
-	for _, version := range alertmanager.SupportedVersions {
+	for _, version := range testVersions {
 		mockAlerts(version)
 		r := ginTestEngine()
 

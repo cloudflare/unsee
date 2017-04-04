@@ -1,15 +1,17 @@
-package alertmanager
+package amv05
 
 import (
 	"errors"
 	"time"
 
+	"github.com/blang/semver"
 	"github.com/cloudflare/unsee/config"
+	"github.com/cloudflare/unsee/mapper"
 	"github.com/cloudflare/unsee/models"
+	"github.com/cloudflare/unsee/remote"
 )
 
-// AlertmanagerAlert is vanilla alert object from Alertmanager 0.5
-type alertV05 struct {
+type alert struct {
 	Annotations  map[string]string `json:"annotations"`
 	Labels       map[string]string `json:"labels"`
 	StartsAt     time.Time         `json:"startsAt"`
@@ -19,32 +21,50 @@ type alertV05 struct {
 	Silenced     string            `json:"silenced"`
 }
 
-// alertsGroupsV05 is vanilla group object from Alertmanager, exposed under api/v1/alerts/groups
-type alertsGroupsV05 struct {
+type alertsGroups struct {
 	Labels map[string]string `json:"labels"`
 	Blocks []struct {
-		Alerts []alertV05 `json:"alerts"`
+		Alerts []alert `json:"alerts"`
 	} `json:"blocks"`
 }
 
-// alertsGroupsAPIResponseV05 is the schema of API response for /api/v1/alerts/groups
-type alertsGroupsAPIResponseV05 struct {
-	Status string            `json:"status"`
-	Groups []alertsGroupsV05 `json:"data"`
-	Error  string            `json:"error"`
+type alertsGroupsAPISchema struct {
+	Status string         `json:"status"`
+	Groups []alertsGroups `json:"data"`
+	Error  string         `json:"error"`
 }
 
-// Get will make a request to Alertmanager API and parse the response
+// V05AlertMapper implements Alertmanager 0.5 API schema
+type V05AlertMapper struct {
+	mapper.AlertMapper
+}
+
+// IsSupported returns true if given version string is supported
+func (m V05AlertMapper) IsSupported(version string) bool {
+	versionRange := semver.MustParseRange(">=0.5.0")
+	return versionRange(semver.MustParse(version))
+}
+
+// GetAlerts will make a request to Alertmanager API and parse the response
 // It will only return alerts or error (if any)
-func (resp *alertsGroupsAPIResponseV05) Get(url string) ([]models.AlertGroup, error) {
+func (m V05AlertMapper) GetAlerts() ([]models.AlertGroup, error) {
 	groups := []models.AlertGroup{}
-	err := getJSONFromURL(url, config.Config.AlertmanagerTimeout, &resp)
+	resp := alertsGroupsAPISchema{}
+
+	url, err := remote.JoinURL(config.Config.AlertmanagerURI, "api/v1/alerts/groups")
 	if err != nil {
 		return groups, err
 	}
-	if resp.Status != StatusOK {
+
+	err = remote.GetJSONFromURL(url, config.Config.AlertmanagerTimeout, &resp)
+	if err != nil {
+		return groups, err
+	}
+
+	if resp.Status != "success" {
 		return groups, errors.New(resp.Error)
 	}
+
 	for _, g := range resp.Groups {
 		alertList := models.AlertList{}
 		for _, b := range g.Blocks {
