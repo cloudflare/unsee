@@ -168,9 +168,11 @@ var acTests = []acTestCase{
 			"@age<1h",
 			"@age>10m",
 			"@age>1h",
+			"alertname!=Free_Disk_Space_Too_Low",
 			"alertname!=HTTP_Probe_Failed",
 			"alertname!=Host_Down",
 			"alertname!=Memory_Usage_Too_High",
+			"alertname=Free_Disk_Space_Too_Low",
 			"alertname=HTTP_Probe_Failed",
 			"alertname=Host_Down",
 			"alertname=Memory_Usage_Too_High",
@@ -179,9 +181,11 @@ var acTests = []acTestCase{
 	acTestCase{
 		Term: "alert",
 		Results: []string{
+			"alertname!=Free_Disk_Space_Too_Low",
 			"alertname!=HTTP_Probe_Failed",
 			"alertname!=Host_Down",
 			"alertname!=Memory_Usage_Too_High",
+			"alertname=Free_Disk_Space_Too_Low",
 			"alertname=HTTP_Probe_Failed",
 			"alertname=Host_Down",
 			"alertname=Memory_Usage_Too_High",
@@ -190,9 +194,11 @@ var acTests = []acTestCase{
 	acTestCase{
 		Term: "alertname",
 		Results: []string{
+			"alertname!=Free_Disk_Space_Too_Low",
 			"alertname!=HTTP_Probe_Failed",
 			"alertname!=Host_Down",
 			"alertname!=Memory_Usage_Too_High",
+			"alertname=Free_Disk_Space_Too_Low",
 			"alertname=HTTP_Probe_Failed",
 			"alertname=Host_Down",
 			"alertname=Memory_Usage_Too_High",
@@ -201,9 +207,11 @@ var acTests = []acTestCase{
 	acTestCase{
 		Term: "aLeRtNaMe",
 		Results: []string{
+			"alertname!=Free_Disk_Space_Too_Low",
 			"alertname!=HTTP_Probe_Failed",
 			"alertname!=Host_Down",
 			"alertname!=Memory_Usage_Too_High",
+			"alertname=Free_Disk_Space_Too_Low",
 			"alertname=HTTP_Probe_Failed",
 			"alertname=Host_Down",
 			"alertname=Memory_Usage_Too_High",
@@ -302,7 +310,7 @@ func TestAutocomplete(t *testing.T) {
 			}
 			for i := range ur {
 				if ur[i] != acTest.Results[i] {
-					t.Errorf("Result mismatch, got '%s' when '%s' was expected", ur[i], acTest.Results[i])
+					t.Errorf("Result mismatch for term='%s', got '%s' when '%s' was expected", acTest.Term, ur[i], acTest.Results[i])
 				}
 			}
 		}
