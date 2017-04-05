@@ -1,4 +1,4 @@
-package alertmanager
+package remote_test
 
 import (
 	"io/ioutil"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/cloudflare/unsee/remote"
 	httpmock "gopkg.in/jarcoal/httpmock.v1"
 )
 
@@ -35,7 +36,7 @@ var joinURLTests = []joinURLTest{
 
 func TestJoinURL(t *testing.T) {
 	for _, testCase := range joinURLTests {
-		url, err := joinURL(testCase.base, testCase.sub)
+		url, err := remote.JoinURL(testCase.base, testCase.sub)
 		if err != nil {
 			t.Errorf("joinURL(%v, %v) failed: %s", testCase.base, testCase.sub, err.Error())
 		}
@@ -65,14 +66,14 @@ func TestGetJSONFromURL(t *testing.T) {
 	httpmock.RegisterResponder("GET", "http://localhost/", httpmock.NewStringResponder(200, mockJSON))
 
 	response := mockJSONResponse{}
-	err := getJSONFromURL("http://localhost/", time.Second, &response)
+	err := remote.GetJSONFromURL("http://localhost/", time.Second, &response)
 	if err != nil {
 		t.Errorf("getJSONFromURL() failed: %s", err.Error())
 	}
 
 	httpmock.RegisterResponder("GET", "http://localhost/404", httpmock.NewStringResponder(404, "Not found"))
 	response = mockJSONResponse{}
-	err = getJSONFromURL("http://localhost/404", time.Second, &response)
+	err = remote.GetJSONFromURL("http://localhost/404", time.Second, &response)
 	if err == nil {
 		t.Errorf("getJSONFromURL() on invalid url didn't return 404, response: %v", response)
 	}
