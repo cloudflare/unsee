@@ -65,14 +65,16 @@ var Alerts = (function() {
 
 
     sortMapByKey = function(mapToSort) {
-        var keys = Object.keys(mapToSort);
+        // clone map object so it doesn't change while we work with it
+        var m = $.extend({}, mapToSort);
+        var keys = Object.keys(m);
         keys.sort();
         var sorted = [];
         $.each(keys, function(i, key) {
             sorted.push({
                 key: key,
-                value: mapToSort[key],
-                text: key + ': ' + mapToSort[key]
+                value: m[key],
+                text: key + ': ' + m[key]
             });
         });
         return sorted;
