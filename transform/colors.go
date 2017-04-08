@@ -13,8 +13,8 @@ import (
 
 func labelToSeed(key string, val string) int64 {
 	h := sha1.New()
-	io.WriteString(h, key)
 	io.WriteString(h, val)
+	io.WriteString(h, key)
 	var seed int64
 	for _, i := range h.Sum(nil) {
 		seed += int64(i)
