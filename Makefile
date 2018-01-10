@@ -1,9 +1,17 @@
 NAME    := unsee
 VERSION := $(shell git describe --tags --always --dirty='-dev')
+GO      := GO15VENDOREXPERIMENT=1 go
+PROMU   := $(GOPATH)/bin/promu
+pkgs     = $(shell $(GO) list ./... | grep -v -E '/vendor/')
+
+PREFIX                  ?= $(shell pwd)
+BIN_DIR                 ?= $(shell pwd)
+DOCKER_IMAGE_NAME       ?= unsee
+DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
 # Alertmanager instance used when running locally, points to mock data
 MOCK_PATH         := $(CURDIR)/internal/mock/0.12.0
-ALERTMANAGER_URI := "file://$(MOCK_PATH)"
+ALERTMANAGER_URI  := "file://$(MOCK_PATH)"
 # Listen port when running locally
 PORT := 8080
 
@@ -23,14 +31,14 @@ endif
 
 .build/deps-build-go.ok:
 	@mkdir -p .build
-	go get -u github.com/golang/dep/cmd/dep
-	go get -u github.com/jteeuwen/go-bindata/...
-	go get -u github.com/elazarl/go-bindata-assetfs/...
+	$(GO) get -u github.com/golang/dep/cmd/dep
+	$(GO) get -u github.com/jteeuwen/go-bindata/...
+	$(GO) get -u github.com/elazarl/go-bindata-assetfs/...
 	touch $@
 
 .build/deps-lint-go.ok:
 	@mkdir -p .build
-	go get -u github.com/golang/lint/golint
+	$(GO) get -u github.com/golang/lint/golint
 	touch $@
 
 .build/deps-build-node.ok: package.json package-lock.json
@@ -52,12 +60,29 @@ bindata_assetfs.go: .build/deps-build-go.ok .build/artifacts-bindata_assetfs.$(G
 	go-bindata-assetfs $(GO_BINDATA_FLAGS) -prefix assets -nometadata assets/templates/... assets/static/dist/...
 
 $(NAME): .build/deps-build-go.ok .build/vendor.ok bindata_assetfs.go $(SOURCES)
-	go build -ldflags "-X main.version=$(VERSION)"
+	$(GO) build -ldflags "-X main.version=$(VERSION)"
 
 .build/vendor.ok: .build/deps-build-go.ok Gopkg.lock Gopkg.toml
 	dep ensure
 	dep prune
 	touch $@
+
+build: promu
+	@echo ">> building binaries"
+	@$(PROMU) build --prefix $(PREFIX)
+
+tarball: promu
+	@echo ">> building release tarball"
+	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
+
+docker:
+	@echo ">> building docker image"
+	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+
+promu:
+	@GOOS=$(shell uname -s | tr A-Z a-z) \
+	GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+	$(GO) get -u github.com/prometheus/promu
 
 .PHONY: vendor
 vendor: .build/deps-build-go.ok
@@ -130,7 +155,7 @@ mock-assets: .build/deps-build-go.ok
 
 .PHONY: test-go
 test-go: .build/vendor.ok
-	go test -bench=. -cover `go list ./... | grep -v /vendor/`
+	$(GO) test -bench=. -cover `go list ./... | grep -v /vendor/`
 
 .PHONY: test-js
 test-js: .build/deps-build-node.ok
