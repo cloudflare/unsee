@@ -2,6 +2,13 @@ go_import_path: github.com/cloudflare/unsee
 
 jobs:
   include:
+    - stage: Lint Travis CI configuration
+      language: ruby
+      before_script:
+        - gem install travis --no-rdoc --no-ri
+      script:
+        - travis lint -x --no-interactive .travis.yml
+
     - stage: Test Go code
       language: go
       go:  "1.9.2"
