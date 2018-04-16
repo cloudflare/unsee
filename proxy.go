@@ -45,7 +45,6 @@ func NewAlertmanagerProxy(alertmanager *alertmanager.Alertmanager) (*httputil.Re
 			// drop Content-Length header from upstream responses, gzip middleware
 			// will compress those and that could cause a mismatch
 			resp.Header.Del("Content-Length")
-
 			return nil
 		},
 	}
