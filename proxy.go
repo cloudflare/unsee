@@ -35,6 +35,9 @@ func NewAlertmanagerProxy(alertmanager *alertmanager.Alertmanager) (*httputil.Re
 			// upstream, there's a gzip middleware that's global so we don't want it
 			// to gzip twice
 			req.Header.Del("Accept-Encoding")
+
+			// drop Host header to not overwrite hostname of proxied target url
+			req.Header.Del("Host")
 			log.Debugf("[%s] Proxy request for %s", alertmanager.Name, req.URL.Path)
 		},
 		Transport: alertmanager.HTTPTransport,
@@ -42,6 +45,7 @@ func NewAlertmanagerProxy(alertmanager *alertmanager.Alertmanager) (*httputil.Re
 			// drop Content-Length header from upstream responses, gzip middleware
 			// will compress those and that could cause a mismatch
 			resp.Header.Del("Content-Length")
+
 			return nil
 		},
 	}
