@@ -39,6 +39,11 @@ func NewAlertmanagerProxy(alertmanager *alertmanager.Alertmanager) (*httputil.Re
 			// drop Host header to not overwrite hostname of proxied target url
 			req.Header.Del("Host")
 			log.Debugf("[%s] Proxy request for %s", alertmanager.Name, req.URL.Path)
+			requestDump, err := httputil.DumpRequest(req, true)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(string(requestDump))
 		},
 		Transport: alertmanager.HTTPTransport,
 		ModifyResponse: func(resp *http.Response) error {
