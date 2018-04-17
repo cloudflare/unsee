@@ -40,11 +40,6 @@ func NewAlertmanagerProxy(alertmanager *alertmanager.Alertmanager) (*httputil.Re
 			req.Host = upstreamURL.Host
 
 			log.Debugf("[%s] Proxy request for %s", alertmanager.Name, req.URL.Path)
-			requestDump, err := httputil.DumpRequest(req, true)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println(string(requestDump))
 		},
 		Transport: alertmanager.HTTPTransport,
 		ModifyResponse: func(resp *http.Response) error {
