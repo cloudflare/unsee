@@ -36,8 +36,9 @@ func NewAlertmanagerProxy(alertmanager *alertmanager.Alertmanager) (*httputil.Re
 			// to gzip twice
 			req.Header.Del("Accept-Encoding")
 
-			// drop Host header to not overwrite hostname of proxied target url
-			req.Header.Del("Host")
+			// set hostname of proxied target
+			req.Host = upstreamURL.Host
+
 			log.Debugf("[%s] Proxy request for %s", alertmanager.Name, req.URL.Path)
 			requestDump, err := httputil.DumpRequest(req, true)
 			if err != nil {
