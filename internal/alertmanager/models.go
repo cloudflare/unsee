@@ -242,6 +242,22 @@ func (am *Alertmanager) pullAlerts(version string) error {
 					silences[silenceID] = silence
 				}
 			}
+			// Some silences might have expired, Alertmanager will purge those only
+			// after some time passes, this is days rather than minutes or hours.
+			// If alert is silenced and we have a single silence then we should show
+			// it, since it's the only information we have, but if we have multiple
+			// silences then we should purge all expired and only show active silences
+			if len(silences) > 1 {
+				expiredSilences := []string{}
+				for silenceID, silence := range silences {
+					if silence.EndsAt.Before(start) {
+						expiredSilences = append(expiredSilences, silenceID)
+					}
+				}
+				for _, silenceID := range expiredSilences {
+					delete(silences, silenceID)
+				}
+			}
 			alert.Alertmanager = []models.AlertmanagerInstance{
 				models.AlertmanagerInstance{
 					Name:     am.Name,
