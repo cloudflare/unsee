@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/blang/semver"
 	"github.com/cloudflare/unsee/internal/mapper"
 	"github.com/cloudflare/unsee/internal/models"
+	"github.com/cloudflare/unsee/internal/semver"
 	"github.com/cloudflare/unsee/internal/uri"
 )
 
