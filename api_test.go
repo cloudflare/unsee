@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/blang/semver"
 	"github.com/cloudflare/unsee/internal/mock"
 	"github.com/cloudflare/unsee/internal/models"
+	"github.com/cloudflare/unsee/internal/semver"
 )
 
 type groupTest struct {
