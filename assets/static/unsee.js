@@ -51,7 +51,7 @@ function parseAJAXError(xhr, textStatus) {
     // default to textStatus, it's usually just "error" string
     var err = textStatus;
     if (xhr.readyState === 0) {
-        // ajax() completed but request wasn't send
+        // ajax() completed but request wasn't sent
         err = "Connection to the remote endpoint failed";
     } else if (xhr.responseJSON && xhr.responseJSON.error) {
         // there's response JSON and an error key in it
