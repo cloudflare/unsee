@@ -1,3 +1,5 @@
+**NOTE:** This project has been superceded by [Karka](https://github.com/prymitive/karma).
+
 # unsee
 
 Alert dashboard for
